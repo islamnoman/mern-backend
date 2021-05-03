@@ -1,0 +1,17 @@
+{
+  "name": "mern-backend",
+  "version": "1.0.0",
+  "description": "mojo develop with express and mongodb",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "express",
+    "mongodb",
+    "mojo",
+    "nomanstyle"
+  ],
+  "author": "Noman Islam",
+  "license": "ISC"
+}
