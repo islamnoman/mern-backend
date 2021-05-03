@@ -3,7 +3,7 @@ const Schema = mongoose.Schema;
 const moment = require('moment');
 
 
-const UserSchema = new Schema({
+const userSchema = new Schema({
     username: {
         type: String,
         required: true
