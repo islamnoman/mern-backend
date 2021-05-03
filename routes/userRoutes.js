@@ -16,12 +16,10 @@ router.use(bodyParser.json());
 router.use(bodyParser.urlencoded({ extended: true }));
 
 
-// url: http://localhost:500/api/users/
+// url: http://localhost:500/api/user/
 // default route
-router.get(
-    '/',
-    (req, res) => {
-        res.status(200).json(
+router.get('/', (req, res) => {
+        return res.status(200).json(
             {
                 "status": true,
                 "message": "User default route."
@@ -32,7 +30,7 @@ router.get(
 
 
 // user reg route
-// url: http:localhost:500/api/users/register
+// url: http:localhost:500/api/user/register
 
 router.post(
     '/register',
@@ -55,9 +53,14 @@ router.post(
             });
         }
 
+        const salt = bcrypt.genSaltSync(10)
+        const hashedPassword = bcrypt.hashSync(req.body.password, );
+
+
         return res.status(200).json({
             "status": true,
-            "data": req.body
+            "data": req.body,
+            "hashedPassword" : hashedPassword
         });
     }
 );
