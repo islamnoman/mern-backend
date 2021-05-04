@@ -1,7 +1,7 @@
 // require('dotenv');
 const router = require('express').Router();
 const bcrypt = require('bcryptjs');
-const { json } = require('body-parser');
+// const { json } = require('body-parser');
 const bodyParser = require('body-parser');
 const { check, validationResult, body } = require('express-validator');
 const jwt = require('jsonwebtoken');
@@ -9,6 +9,8 @@ const moment = require('moment');
 
 const User = require('./../models/User');
 const token_key = process.env.TOKEN_KEY;
+
+const storage = require('./strorage');
 
 
 // middleware setup
@@ -100,5 +102,26 @@ router.post(
         // });
     }
 );
+
+// user reg route
+// url: http:localhost:500/api/user/uploadProfilePic
+// method: POST
+router.post(
+    '/uploadProfilePic',
+    (req, res) => {
+        let upload = storage.getProfilePicUpload();
+
+        upload(req, res, (error) => {
+            console.log(req.file);
+
+            return res.status(200).json({
+                "status": true,
+                "error": error,
+                "message": "File upload success"
+            });
+        });
+    }
+);
+
 
 module.exports = router;
