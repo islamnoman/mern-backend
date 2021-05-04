@@ -295,4 +295,103 @@ router.post(
 //     });
 // });
 
+
+// user change password route
+// url: http:localhost:500/api/user/change_password
+
+router.put(
+    '/change_password',
+    verifyToken,
+    [
+        // check empty field
+        check('username').not().isEmpty().withMessage("validation.username_empty").trim().escape(),
+        check('newPassword').not().isEmpty().withMessage("validation.password_empty").trim().escape(),
+        check('newPassword2').not().isEmpty().withMessage("validation.password2_empty").trim().escape(),
+        check('oldPassword').not().isEmpty().withMessage("validation.password_empty").trim().escape()
+    ],
+    (req, res) => {
+        const errors = validationResult(req);
+
+        // check error is not empty
+        if(!errors.isEmpty()){
+
+            let error = {}
+
+            for (index = 0; index < errors.array().length; index++){
+                error = {
+                    ...error,
+                    [errors.array()[index].param] : errors.array()[index].msg
+                }
+            }
+            return res.status(400).json({
+                "status": false,
+                "error": error,
+                "message": "Form validation error.."
+            });
+        }
+
+        // check passwor = retype password
+        if (req.body.newPassword != req.body.newPassword2){
+            return res.status(400).json({
+                "status": false,
+                "error": {
+                    "newPassword2": "validation.password2_not_same"
+                },
+                "message": "Form validation error.."
+            });
+        }
+
+        // check email exist or not
+        User.findOne({ _id: req.user.id }).then(user => {
+
+            // check old password match with password in database
+            const isMatch = bcrypt.compareSync(req.body.oldPassword, user.password);
+
+            if (!isMatch){
+                return res.status(400).json({
+                    "status": false,
+                    error: {
+                        "oldPassword": "validation.oldPassword_not_match"
+                    },
+                    "message": "Old password not match in db."
+                });
+            }
+
+            // hash new password
+            const salt = bcrypt.genSaltSync(10)
+            const hashedPassword = bcrypt.hashSync(req.body.newPassword, salt);
+            // update new password
+            const newData = {
+                username: req.body.username,
+                password: hashedPassword,
+                updatedAt: moment().format("DD/MM/YYYY") + ";"+ moment().format("hh:mm:ss")
+            }
+
+            User.findOneAndUpdate({_id: req.user.id}, { $set: newData }, { new: true }).then(user => {
+                return res.status(200).json({
+                    "status": true,
+                    "user": {
+                        "username": user.username
+                    }
+                });
+            }).catch(error => {
+                return res.status(502).json({
+                    "status": false,
+                    "error": {
+                        "db_error": "validation.db_error"
+                    }
+                });
+            })
+            
+        }).catch(error => {
+            return res.status(502).json({
+                "status": false,
+                "error": {
+                    "db_error": "validation.db_error"
+                }
+            });
+        });
+    }
+);
+
 module.exports = router;
