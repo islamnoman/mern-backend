@@ -40,20 +40,41 @@ router.post(
     '/register',
     [
         // check empty field
-        check('username').not().isEmpty().trim().escape(),
-        check('password').not().isEmpty().trim().escape(),
+        check('username').not().isEmpty().withMessage("validation.username_empty").trim().escape(),
+        check('password').not().isEmpty().withMessage("validation.password_empty").trim().escape(),
+        check('password2').not().isEmpty().withMessage("validation.password2_empty").trim().escape(),
 
         // check email
-        check('email').isEmail().normalizeEmail()
+        check('email').isEmail().normalizeEmail().withMessage("validation.invalid_email")
     ],
     (req, res) => {
         const errors = validationResult(req);
 
-        // check error isnot empty
+        // check error is not empty
         if(!errors.isEmpty()){
+
+            let error = {}
+
+            for (index = 0; index < errors.array().length; index++){
+                error = {
+                    ...error,
+                    [errors.array()[index].param] : errors.array()[index].msg
+                }
+            }
             return res.status(400).json({
                 "status": false,
-                "errors": errors.array(),
+                "error": error,
+                "message": "Form validation error.."
+            });
+        }
+
+        // check passwor = retype password
+        if (req.body.password != req.body.password2){
+            return res.status(400).json({
+                "status": false,
+                "error": {
+                    "password2": "validation.password2_not_same"
+                },
                 "message": "Form validation error.."
             });
         }
@@ -64,6 +85,9 @@ router.post(
             if (user) {
                 return res.status(409).json({
                     "status": false,
+                    error: {
+                        "email": "validation.email_exists"
+                    },
                     "message": "User email already exists"
                 });
             } else {
@@ -86,14 +110,18 @@ router.post(
                 }).catch(error => {
                     return res.status(502).json({
                         "status": false,
-                        "error": error
+                        "error": {
+                            "db_error": "validation.db_error"
+                        }
                     });
                 });
             }
         }).catch(error => {
             return res.status(502).json({
                 "status": false,
-                "error": error
+                "error": {
+                    "db_error": "validation.db_error"
+                }
             });
         });
 
@@ -130,6 +158,9 @@ router.post(
             if (!req.file) {
                 return res.status(400).json({
                     "status": false,
+                    "error": {
+                        "profile_pic": "validation.profile_pic_empty"
+                    },
                     "message": "Please Upload Profile pic.."
                 });
             }
@@ -152,6 +183,9 @@ router.post(
                 .catch(error => {
                     return res.status(502).json({
                         "status": false,
+                        "error": {
+                            "db_error": "validation.db_error"
+                        },
                         "message": "Database error.."
                     });
                 });
@@ -167,9 +201,9 @@ router.post(
     '/login',
     [
         // check email
-        check('email').isEmail().normalizeEmail(),
+        check('email').isEmail().normalizeEmail().withMessage("validation.invalid_email"),
         // check empty field
-        check('password').not().isEmpty().trim().escape()
+        check('password').not().isEmpty().withMessage("validation.password_empty").trim().escape()
 
         
     ],
@@ -178,9 +212,19 @@ router.post(
 
         // check error isnot empty
         if(!errors.isEmpty()){
+
+            let error = {}
+
+            for (index = 0; index < errors.array().length; index++){
+                error = {
+                    ...error,
+                    [errors.array()[index].param] : errors.array()[index].msg
+                }
+            }
+
             return res.status(400).json({
                 "status": false,
-                "errors": errors.array(),
+                "error": error,
                 "message": "Form validation error.."
             });
         }
@@ -191,6 +235,9 @@ router.post(
                 if (!user) {
                     return res.status(404).json({
                         "status": false,
+                        "error": {
+                            "email": "validation.email_not_exists"
+                        },
                         "message": "User don't exists"
                     });
                 } else{
@@ -201,6 +248,9 @@ router.post(
                     if (!isPasswordMatch){
                         return res.status(401).json({
                             "status": false,
+                            "error": {
+                                "password": "validation.password_not_match"
+                            },
                             "message": "Password don't match.."
                         });
                     }
@@ -228,6 +278,9 @@ router.post(
             }).catch((error) => {
                 return res.status(502).json({
                     "status": false,
+                    "error": {
+                        "db_error": "validation.db_error"
+                    },
                     "message": "Database error.."
                 });
             });
