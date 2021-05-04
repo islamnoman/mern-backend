@@ -53,15 +53,51 @@ router.post(
             });
         }
 
-        const salt = bcrypt.genSaltSync(10)
-        const hashedPassword = bcrypt.hashSync(req.body.password, );
+        // check email exist or not
+        User.findOne({ email: req.body.email }).then(user => {
+            
+            if (user) {
+                return res.status(409).json({
+                    "status": false,
+                    "message": "User email already exists"
+                });
+            } else {
+                const salt = bcrypt.genSaltSync(10)
+                const hashedPassword = bcrypt.hashSync(req.body.password, salt);
 
+                // create user obj from user Schema
+                const newUser = new User({
+                    email: req.body.email,
+                    username: req.body.username,
+                    password: hashedPassword
+                });
 
-        return res.status(200).json({
-            "status": true,
-            "data": req.body,
-            "hashedPassword" : hashedPassword
+                // insert new user
+                newUser.save().then(result => {
+                    return res.status(200).json({
+                        "status": true,
+                        "user": result
+                    });
+                }).catch(error => {
+                    return res.status(502).json({
+                        "status": false,
+                        "error": error
+                    });
+                });
+            }
+        }).catch(error => {
+            return res.status(502).json({
+                "status": false,
+                "error": error
+            });
         });
+
+
+        // return res.status(200).json({
+        //     "status": true,
+        //     "data": req.body,
+        //     "hashedPassword" : hashedPassword
+        // });
     }
 );
 
